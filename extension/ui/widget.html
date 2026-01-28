@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sparkus Widget</title>
+    <link rel="stylesheet" href="widget.css">
+</head>
+
+<body>
+    <div class="sparkus-widget" id="sparkus-widget">
+        <div class="widget-header">
+            <span class="widget-logo">S</span>
+            <span class="widget-title">Sparkus</span>
+            <button class="widget-minimize" id="minimize-btn">−</button>
+        </div>
+
+        <div class="widget-content" id="widget-content">
+            <div class="focus-display">
+                <div class="focus-circle" id="focus-circle">
+                    <div class="focus-percentage" id="focus-percentage">100%</div>
+                </div>
+                <div class="focus-label">Focus Score</div>
+            </div>
+
+            <div class="status-indicators">
+                <div class="indicator" id="eye-indicator">
+                    <span class="indicator-icon">👁️</span>
+                    <span class="indicator-text">Looking at screen</span>
+                </div>
+                <div class="indicator" id="tab-indicator">
+                    <span class="indicator-icon">📑</span>
+                    <span class="indicator-text">Tab active</span>
+                </div>
+                <div class="indicator" id="network-indicator">
+                    <span class="indicator-icon">🌐</span>
+                    <span class="indicator-text">Connected</span>
+                </div>
+            </div>
+
+            <div class="session-info">
+                <div class="session-name" id="session-name">Session Active</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="widget.js"></script>
+</body>
+
+</html>

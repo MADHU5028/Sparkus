@@ -1,0 +1,105 @@
+.report-actions {
+    display: flex;
+    gap: var(--space-3);
+}
+
+/* Report Stats */
+.report-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-6);
+    margin-bottom: var(--space-8);
+}
+
+.stat-card-report {
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    transition: var(--transition-fast);
+}
+
+.stat-card-report:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.stat-card-report--success {
+    border-color: var(--success-500);
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--success-light) 100%);
+}
+
+.stat-card-report--danger {
+    border-color: var(--danger-500);
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--danger-light) 100%);
+}
+
+.stat-card-report--primary {
+    border-color: var(--primary-500);
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--primary-50) 100%);
+}
+
+.stat-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+}
+
+.stat-header .stat-icon {
+    font-size: 20px;
+}
+
+.stat-header .stat-label {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-value-large {
+    font-size: var(--text-5xl);
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+/* Attendance Section */
+.attendance-section {
+    margin-bottom: var(--space-8);
+}
+
+.btn-override {
+    padding: var(--space-2) var(--space-3);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.btn-override:hover {
+    background: var(--primary-50);
+    border-color: var(--primary-500);
+    color: var(--primary-600);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .report-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .report-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .report-actions button {
+        width: 100%;
+    }
+}

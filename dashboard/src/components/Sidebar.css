@@ -1,0 +1,126 @@
+.sidebar {
+    width: 260px;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+}
+
+.sidebar__header {
+    padding: var(--space-6);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.sidebar__logo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.sidebar__logo-icon {
+    font-size: 28px;
+}
+
+.sidebar__logo-text {
+    font-size: var(--text-xl);
+    font-weight: 700;
+    color: var(--primary-500);
+}
+
+.sidebar__nav {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow-y: auto;
+}
+
+.sidebar__menu {
+    padding: var(--space-4) 0;
+}
+
+.sidebar__menu--bottom {
+    border-top: 1px solid var(--border-color);
+}
+
+.sidebar__item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-6);
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: var(--transition-fast);
+    cursor: pointer;
+    border-left: 3px solid transparent;
+}
+
+.sidebar__item-icon {
+    font-size: 20px;
+    width: 24px;
+    text-align: center;
+}
+
+.sidebar__item-label {
+    font-size: var(--text-sm);
+    font-weight: 500;
+}
+
+.sidebar__item:hover {
+    background: var(--bg-hover);
+}
+
+.sidebar__item--active {
+    background: var(--primary-50);
+    color: var(--primary-600);
+    border-left: 3px solid var(--primary-500);
+}
+
+.sidebar__item--disabled {
+    opacity: 0.5;
+}
+
+.sidebar__item--disabled:hover {
+    background: transparent;
+    color: var(--text-secondary);
+}
+
+.sidebar__divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: var(--space-4) var(--space-3);
+}
+
+.sidebar__section-title {
+    padding: var(--space-3) var(--space-6);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sidebar__item--logout {
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    font-family: inherit;
+}
+
+.sidebar__item--logout:hover {
+    background: var(--danger-50);
+    color: var(--danger-600);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+    }
+}

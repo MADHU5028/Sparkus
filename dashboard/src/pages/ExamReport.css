@@ -1,0 +1,87 @@
+/* Alert Banner */
+.alert-banner {
+    background: linear-gradient(135deg, var(--warning-light) 0%, var(--danger-light) 100%);
+    border: 2px solid var(--warning-500);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    margin-bottom: var(--space-8);
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.alert-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+}
+
+.alert-content strong {
+    display: block;
+    font-size: var(--text-lg);
+    color: var(--danger-600);
+    margin-bottom: var(--space-1);
+}
+
+.alert-content p {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* Exam Section */
+.exam-section {
+    margin-bottom: var(--space-8);
+}
+
+/* Violations Cell */
+.violations-cell {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    max-width: 400px;
+}
+
+.violation-badge {
+    display: inline-block;
+}
+
+.no-violations {
+    color: var(--text-tertiary);
+    font-size: var(--text-sm);
+    font-style: italic;
+}
+
+/* Flagged Row */
+.row-flagged {
+    background: var(--danger-light) !important;
+}
+
+.row-flagged:hover {
+    background: #fecaca !important;
+}
+
+/* Details Button */
+.btn-details {
+    padding: var(--space-2) var(--space-4);
+    background: var(--primary-50);
+    border: 1px solid var(--primary-200);
+    color: var(--primary-600);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.btn-details:hover {
+    background: var(--primary-500);
+    border-color: var(--primary-500);
+    color: white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .violations-cell {
+        max-width: 100%;
+    }
+}

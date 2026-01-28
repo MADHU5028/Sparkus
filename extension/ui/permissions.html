@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sparkus Permissions</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 28px;
+        }
+
+        h2 {
+            font-size: 22px;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .permissions-list {
+            margin: 30px 0;
+        }
+
+        .permission-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .permission-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .permission-icon {
+            font-size: 24px;
+            margin-right: 12px;
+        }
+
+        .permission-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .permission-desc {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .privacy-note {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .privacy-note-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2e7d32;
+            margin-bottom: 5px;
+        }
+
+        .privacy-note-text {
+            font-size: 13px;
+            color: #558b2f;
+            line-height: 1.5;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="modal">
+        <div class="header">
+            <div class="icon">🔒</div>
+            <h2>Enable Sparkus Monitoring</h2>
+            <p class="subtitle">We need your permission to track focus during this session</p>
+        </div>
+
+        <div class="permissions-list">
+            <div class="permission-card">
+                <div class="permission-header">
+                    <span class="permission-icon">📷</span>
+                    <span class="permission-title">Camera Access</span>
+                </div>
+                <p class="permission-desc">
+                    Used for eye tracking to detect if you're looking at the screen. Video is processed locally and
+                    never sent to servers.
+                </p>
+            </div>
+
+            <div class="permission-card">
+                <div class="permission-header">
+                    <span class="permission-icon">🖥️</span>
+                    <span class="permission-title">Tab & Screen Activity</span>
+                </div>
+                <p class="permission-desc">
+                    Monitors tab switching, window visibility, and screen state to calculate your focus score.
+                </p>
+            </div>
+
+            <div class="permission-card">
+                <div class="permission-header">
+                    <span class="permission-icon">📊</span>
+                    <span class="permission-title">Focus Monitoring</span>
+                </div>
+                <p class="permission-desc">
+                    Tracks your engagement level during the session. Only focus scores are sent to the host, not raw
+                    activity data.
+                </p>
+            </div>
+        </div>
+
+        <div class="privacy-note">
+            <div class="privacy-note-title">🔐 Privacy Guarantee</div>
+            <p class="privacy-note-text">
+                • Monitoring only active during this session<br>
+                • No camera feed visible to host<br>
+                • Eye tracking processed locally<br>
+                • You can see your own focus score
+            </p>
+        </div>
+
+        <button class="btn btn-primary" id="enable-btn">Enable Sparkus Monitoring</button>
+    </div>
+
+    <script src="permissions.js"></script>
+</body>
+
+</html>

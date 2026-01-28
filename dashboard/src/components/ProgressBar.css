@@ -1,0 +1,56 @@
+.progress-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    width: 100%;
+}
+
+.progress-bar__track {
+    flex: 1;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar--sm .progress-bar__track {
+    height: 4px;
+}
+
+.progress-bar--md .progress-bar__track {
+    height: 8px;
+}
+
+.progress-bar--lg .progress-bar__track {
+    height: 12px;
+}
+
+.progress-bar__fill {
+    height: 100%;
+    transition: width 0.3s ease, background-color 0.3s ease;
+    border-radius: var(--radius-full);
+}
+
+.progress-bar__fill--primary {
+    background: var(--primary);
+}
+
+.progress-bar__fill--success {
+    background: var(--success);
+}
+
+.progress-bar__fill--warning {
+    background: var(--warning);
+}
+
+.progress-bar__fill--danger {
+    background: var(--danger);
+}
+
+.progress-bar__label {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-secondary);
+    min-width: 32px;
+    text-align: right;
+}

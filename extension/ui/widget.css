@@ -1,0 +1,214 @@
+/* Sparkus Widget Styles - Matching Dashboard Design System */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* CSS Variables matching dashboard */
+:root {
+  --primary-500: #6366f1;
+  --primary-600: #4f46e5;
+  --primary-700: #4338ca;
+  --success-500: #10b981;
+  --warning-500: #f59e0b;
+  --danger-500: #ef4444;
+  --danger-600: #dc2626;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --text-tertiary: #9ca3af;
+  --border-color: #e5e7eb;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+  --transition-base: 200ms ease;
+}
+
+/* Floating Widget - Card Design */
+.sparkus-widget {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  /* Soft shadow */
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  z-index: 999999;
+  transition: all var(--transition-base);
+  min-width: 140px;
+  /* Compact width */
+  padding: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.sparkus-widget.minimized {
+  padding: 0;
+  min-width: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: white;
+  display: flex;
+  /* Center logic handled in JS or inner content */
+  align-items: center;
+  justify-content: center;
+}
+
+/* Card Header */
+.widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.widget-label {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.widget-icon {
+  margin-right: 6px;
+  /* Use an SVG or font icon here */
+  width: 14px;
+  height: 14px;
+}
+
+.info-icon {
+  font-size: 14px;
+  color: var(--text-tertiary);
+  cursor: pointer;
+}
+
+/* Card Body */
+.widget-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.focus-percent {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--success-500);
+  /* Default success */
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.status-dot.warning {
+  background-color: var(--warning-500);
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
+.status-dot.danger {
+  background-color: var(--danger-500);
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+/* Minimized State Content */
+.minimized-content {
+  display: none;
+  width: 100%;
+  height: 100%;
+}
+
+.sparkus-widget.minimized .widget-header,
+.sparkus-widget.minimized .widget-body {
+  display: none;
+}
+
+.sparkus-widget.minimized .minimized-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--primary-600);
+}
+
+/* Warning Modal */
+#sparkus-warning {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 32px 40px;
+  border-radius: var(--radius-xl);
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  z-index: 9999999;
+  max-width: 440px;
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+}
+
+.sparkus-warning-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.sparkus-warning-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.sparkus-warning-title.danger {
+  color: var(--danger-600);
+}
+
+.sparkus-warning-message {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+
+.sparkus-warning-count {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-bottom: 20px;
+}
+
+.sparkus-warning-btn {
+  background: linear-gradient(135deg, var(--primary-600), var(--primary-500));
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-base);
+  display: inline-block;
+}
+
+.sparkus-warning-btn:hover {
+  background: linear-gradient(135deg, var(--primary-700), var(--primary-600));
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}

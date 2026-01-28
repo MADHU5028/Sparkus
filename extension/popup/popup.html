@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sparkus</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            width: 350px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        h1 {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .version {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .status {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+
+        .status-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .status-value {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .join-section {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+
+        .join-section h3 {
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .input-group {
+            margin-bottom: 10px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 5px;
+            opacity: 0.9;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+
+        .input-group input::placeholder {
+            color: #999;
+        }
+
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.8);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 1);
+        }
+
+        .info {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 12px;
+            opacity: 0.8;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .session-info {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .session-info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .session-info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .session-info-label {
+            opacity: 0.8;
+        }
+
+        .session-info-value {
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="logo">⚡</div>
+        <h1>Sparkus</h1>
+        <div class="version">v1.0.0</div>
+    </div>
+
+    <div class="status">
+        <div class="status-label">Status</div>
+        <div class="status-value" id="status">Ready</div>
+    </div>
+
+    <!-- Join Session Section (shown when no active session) -->
+    <div id="join-section" class="join-section">
+        <h3>Join a Session</h3>
+        <div class="input-group">
+            <label for="session-code">Session Code</label>
+            <input type="text" id="session-code" placeholder="SPARK-XXXXXX" />
+        </div>
+        <div class="input-group">
+            <label for="full-name">Full Name</label>
+            <input type="text" id="full-name" placeholder="John Doe" />
+        </div>
+        <div class="input-group">
+            <label for="roll-number">Roll Number</label>
+            <input type="text" id="roll-number" placeholder="2024001" />
+        </div>
+        <button class="btn btn-primary" id="join-btn">Join Session</button>
+    </div>
+
+    <!-- Active Session Section (shown when session is active) -->
+    <div id="active-session" class="hidden">
+        <div class="session-info">
+            <div class="session-info-row">
+                <span class="session-info-label">Session:</span>
+                <span class="session-info-value" id="session-name">-</span>
+            </div>
+            <div class="session-info-row">
+                <span class="session-info-label">Focus Score:</span>
+                <span class="session-info-value" id="focus-score">100%</span>
+            </div>
+            <div class="session-info-row">
+                <span class="session-info-label">Status:</span>
+                <span class="session-info-value" id="tracking-status">Active</span>
+            </div>
+        </div>
+        <button class="btn btn-danger" id="leave-btn">Leave Session</button>
+    </div>
+
+    <div class="actions">
+        <button class="btn btn-secondary" id="dashboard-btn">Open Dashboard</button>
+    </div>
+
+    <div class="info">
+        Focus tracking for remote learning
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>
