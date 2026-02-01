@@ -17,14 +17,16 @@ const AISummaryOverview = () => {
     }, [user]);
 
     const fetchSessions = async () => {
-        if (!user?.userId) return;
+        const userId = user?.id || user?.userId;
+        if (!userId) {
+            setLoading(false);
+            return;
+        }
 
         try {
-            const data = await getHostSessions(user.userId);
-            // Show sessions with AI recording enabled
-            const aiSessions = data.sessions.filter(
-                s => s.aiRecordingEnabled && (s.status === 'ended' || s.status === 'active')
-            );
+            const data = await getHostSessions(userId);
+            // Filter sessions that have AI summary enabled
+            const aiSessions = data.sessions.filter(s => s.modes?.aiRecording);
             setSessions(aiSessions);
 
             // Auto-select the most recent session

@@ -53,7 +53,25 @@ Sparkus runs **alongside** Google Meet/Zoom using a browser extension and web da
 - **Chrome** browser
 - **OpenAI API key** (for AI features)
 
-### 1. Backend Setup
+### 🐳 Docker Setup (Recommended)
+
+The easiest way to run Sparkus is using Docker. This ensures all team members use the same environment.
+
+1.  **Clone the repository**
+2.  **Create `.env` file** in `backend/` directory (see backend/.env.example)
+3.  **Run with Docker Compose**:
+
+```bash
+docker compose up --build
+```
+
+- **Backend**: `http://localhost:5000`
+- **Dashboard**: `http://localhost:5173`
+- **Database**: `postgres:5432`
+
+*Note: The containers are configured for hot-reloading. Any changes you make to the code in `backend/` or `dashboard/` will instantly update in the running application.*
+
+### 🛠️ Manual Setup
 
 ```bash
 cd backend

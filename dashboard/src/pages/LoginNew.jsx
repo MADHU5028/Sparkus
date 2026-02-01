@@ -1,155 +1,108 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import './AuthNew.css';
 
-const Login = () => {
-    const [activeTab, setActiveTab] = useState('signin');
+const LoginNew = () => {
+    const [mode, setMode] = useState('signin'); // 'signin' or 'signup'
     const [formData, setFormData] = useState({
         email: '',
         password: '',
-        fullName: '',
-        confirmPassword: '',
+        name: ''
     });
     const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
+    const [localLoading, setLocalLoading] = useState(false);
 
-    const { login, signup, checkAuth } = useAuth();
+    const { loginWithGoogle, loginWithEmail, registerWithEmail, isAuthenticated, authError } = useAuth();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate('/dashboard');
+        }
+        if (authError) {
+            setError(authError);
+            setLocalLoading(false);
+        }
+    }, [isAuthenticated, authError, navigate]);
 
     const handleChange = (e) => {
         setFormData({
             ...formData,
-            [e.target.name]: e.target.value,
+            [e.target.name]: e.target.value
         });
         setError('');
     };
 
+    const handleGoogleLogin = async () => {
+        setLocalLoading(true);
+        setError('');
+        try {
+            await loginWithGoogle();
+        } catch (err) {
+            console.error("Login failed", err);
+            // Error set by effect via authError or we can set generic here
+            // setLocalLoading(false); // Handled by effect if authError comes back, but if it throws before?
+            // AuthContext throws, so we catch here.
+            setLocalLoading(false);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setLocalLoading(true);
         setError('');
-        setLoading(true);
 
         try {
-            if (activeTab === 'signin') {
-                // Sign In
-                await login(formData.email, formData.password);
-                navigate('/dashboard');
+            if (mode === 'signin') {
+                await loginWithEmail(formData.email, formData.password);
             } else {
-                // Sign Up
-                if (formData.password !== formData.confirmPassword) {
-                    setError('Passwords do not match');
-                    setLoading(false);
-                    return;
+                if (!formData.name) {
+                    throw new Error("Name is required for sign up");
                 }
-                await signup(formData.fullName, formData.email, formData.password);
-                navigate('/dashboard');
+                await registerWithEmail(formData.email, formData.password, formData.name);
             }
         } catch (err) {
-            setError(err.message || 'Authentication failed');
-        } finally {
-            setLoading(false);
+            console.error("Auth failed", err);
+            // setLocalLoading(false); // Handled by effect for authError
+            setLocalLoading(false);
         }
     };
 
-    const handleGoogleLogin = async () => {
-        // Check if Google Client ID is configured
-        const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-
-        if (!clientId || clientId === 'YOUR_GOOGLE_CLIENT_ID' || clientId === 'your_google_client_id_here') {
-            setError('Google Sign-In is not configured yet. Please use email/password login or contact the administrator to set up Google OAuth.');
-            console.warn('Google OAuth Client ID not configured. Set VITE_GOOGLE_CLIENT_ID in .env file.');
-            return;
-        }
-
-        // Check if Google Identity Services is loaded
-        if (typeof google === 'undefined' || !google.accounts) {
-            setError('Google Sign-In is loading... Please wait a moment and try again.');
-            return;
-        }
-
-        try {
-            setLoading(true);
-            setError('');
-
-            // Initialize Google OAuth with button rendering
-            google.accounts.id.initialize({
-                client_id: clientId,
-                callback: handleGoogleCallback,
-                auto_select: false,
-            });
-
-            // Render the button or use prompt
-            google.accounts.id.prompt((notification) => {
-                if (notification.isNotDisplayed()) {
-                    setError('Google Sign-In popup was blocked. Please allow popups for this site.');
-                } else if (notification.isSkippedMoment()) {
-                    setError('Google Sign-In was skipped. Please try clicking the button again.');
-                }
-                setLoading(false);
-            });
-        } catch (err) {
-            console.error('Google OAuth error:', err);
-            setError('Failed to initialize Google Sign-In. Please try again or use email/password login.');
-            setLoading(false);
-        }
-    };
-
-    const handleGoogleCallback = async (response) => {
-        try {
-            setLoading(true);
-            setError('');
-
-            // Decode the JWT credential to get user info
-            const credential = response.credential;
-            const payload = JSON.parse(atob(credential.split('.')[1]));
-
-            console.log('Google user info:', payload);
-
-            // Call our backend with Google user info
-            const { googleLogin: apiGoogleLogin } = await import('../api/auth.js');
-            const data = await apiGoogleLogin(payload.sub, payload.email, payload.name);
-
-            console.log('Google login response:', data);
-
-            // Update auth context
-            await checkAuth();
-            navigate('/dashboard');
-        } catch (err) {
-            console.error('Google callback error:', err);
-            setError(err.message || 'Google sign-in failed. Please try again or use email/password login.');
-        } finally {
-            setLoading(false);
-        }
+    const toggleMode = (newMode) => {
+        setMode(newMode);
+        setError('');
+        setFormData({ email: '', password: '', name: '' });
     };
 
     return (
         <div className="auth-container">
             <div className="auth-card">
-                {/* Logo */}
                 <div className="auth-logo">
                     <div className="auth-logo-icon">🎓</div>
                     <h1 className="auth-logo-text">Sparkus</h1>
                 </div>
 
-                {/* Tabs */}
                 <div className="auth-tabs">
                     <button
-                        className={`auth-tab ${activeTab === 'signin' ? 'auth-tab--active' : ''}`}
-                        onClick={() => setActiveTab('signin')}
+                        className={`auth-tab ${mode === 'signin' ? 'auth-tab--active' : ''}`}
+                        onClick={() => toggleMode('signin')}
                     >
                         Sign In
                     </button>
                     <button
-                        className={`auth-tab ${activeTab === 'signup' ? 'auth-tab--active' : ''}`}
-                        onClick={() => setActiveTab('signup')}
+                        className={`auth-tab ${mode === 'signup' ? 'auth-tab--active' : ''}`}
+                        onClick={() => toggleMode('signup')}
                     >
                         Sign Up
                     </button>
                 </div>
 
-                {/* Google OAuth */}
-                <button className="auth-google-btn" onClick={handleGoogleLogin}>
+                <button
+                    className="auth-google-btn"
+                    onClick={handleGoogleLogin}
+                    disabled={localLoading}
+                >
                     <svg width="18" height="18" viewBox="0 0 18 18">
                         <path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z" />
                         <path fill="#34A853" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 0 1-7.18-2.54H1.83v2.07A8 8 0 0 0 8.98 17z" />
@@ -163,102 +116,77 @@ const Login = () => {
                     <span>or</span>
                 </div>
 
-                {/* Error Message */}
-                {error && (
-                    <div className="auth-error">
-                        {error}
-                    </div>
-                )}
+                {error && <div className="auth-error">{error}</div>}
 
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="auth-form">
-                    {activeTab === 'signup' && (
+                <form className="auth-form" onSubmit={handleSubmit}>
+                    {mode === 'signup' && (
                         <div className="form-group">
-                            <label htmlFor="fullName">Full Name</label>
+                            <label>Full Name</label>
                             <input
                                 type="text"
-                                id="fullName"
-                                name="fullName"
-                                placeholder="John Doe"
-                                value={formData.fullName}
+                                name="name"
+                                value={formData.name}
                                 onChange={handleChange}
+                                placeholder="John Doe"
                                 required
                             />
                         </div>
                     )}
 
                     <div className="form-group">
-                        <label htmlFor="email">Email address</label>
+                        <label>Email address</label>
                         <input
                             type="email"
-                            id="email"
                             name="email"
-                            placeholder="john.doe@example.com"
                             value={formData.email}
                             onChange={handleChange}
+                            placeholder="john.doe@example.com"
                             required
                         />
                     </div>
 
                     <div className="form-group">
-                        <label htmlFor="password">Password</label>
+                        <label>Password</label>
                         <input
                             type="password"
-                            id="password"
                             name="password"
-                            placeholder="••••••••"
                             value={formData.password}
                             onChange={handleChange}
+                            placeholder="••••••••"
                             required
+                            minLength={6}
                         />
                     </div>
 
-                    {activeTab === 'signup' && (
-                        <div className="form-group">
-                            <label htmlFor="confirmPassword">Confirm Password</label>
-                            <input
-                                type="password"
-                                id="confirmPassword"
-                                name="confirmPassword"
-                                placeholder="••••••••"
-                                value={formData.confirmPassword}
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-                    )}
-
-                    {activeTab === 'signin' && (
+                    {mode === 'signin' && (
                         <div className="auth-forgot">
-                            <Link to="/forgot-password">Forgot Password?</Link>
+                            <a href="#">Forgot Password?</a>
                         </div>
                     )}
 
-                    <button
-                        type="submit"
-                        className="auth-submit-btn"
-                        disabled={loading}
-                    >
-                        {loading ? 'Please wait...' : activeTab === 'signin' ? 'Sign In' : 'Sign Up'}
+                    <button type="submit" className="auth-submit-btn" disabled={localLoading}>
+                        {localLoading ? (mode === 'signin' ? 'Signing In...' : 'Creating Account...') : (mode === 'signin' ? 'Sign In' : 'Sign Up')}
                     </button>
-
-                    {activeTab === 'signin' ? (
-                        <p className="auth-footer-text">
-                            Don't have an account? <button type="button" onClick={() => setActiveTab('signup')} className="auth-link">Sign Up</button>
-                        </p>
-                    ) : (
-                        <p className="auth-footer-text">
-                            Already have an account? <button type="button" onClick={() => setActiveTab('signin')} className="auth-link">Sign In</button>
-                        </p>
-                    )}
                 </form>
 
-                <p className="auth-terms">
+                <div className="auth-footer-text">
+                    {mode === 'signin' ? (
+                        <>
+                            Don't have an account? <button className="auth-link" onClick={() => toggleMode('signup')}>Sign Up</button>
+                        </>
+                    ) : (
+                        <>
+                            Already have an account? <button className="auth-link" onClick={() => toggleMode('signin')}>Sign In</button>
+                        </>
+                    )}
+                </div>
+
+                <div className="auth-terms">
                     By signing in you agree to Sparkus's <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
-                </p>
+                </div>
             </div>
         </div>
     );
 };
 
-export default Login;
+export default LoginNew;

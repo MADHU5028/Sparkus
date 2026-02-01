@@ -19,10 +19,12 @@ router.post('/event', async (req, res) => {
             duration, // Duration of violation in seconds
             penalty, // Custom penalty (optional)
             unauthorizedUrl,
+            violations = [], // Aggregated violations
+            focusScore: clientFocusScore, // Score calculated by client
         } = req.body;
 
         // Validation
-        if (!participantId || !sessionId || !eventType) {
+        if (!participantId || !sessionId) {
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
@@ -37,20 +39,22 @@ router.post('/event', async (req, res) => {
         }
 
         const participant = participantResult.rows[0];
-        let currentFocusScore = parseFloat(participant.final_focus_score);
+        // Use client score if provided, else use current DB score (and calc delta?)
+        // The client loop sends the absolute NEW score.
+        let newFocusScore = clientFocusScore !== undefined ? parseFloat(clientFocusScore) : parseFloat(participant.final_focus_score);
 
-        // Get session settings for penalty calculation
-        const sessionResult = await query(
-            `SELECT focus_threshold, tab_switch_grace_period, tab_switch_penalty,
-                    minimize_grace_period, minimize_penalty, eye_away_grace_period,
-                    eye_away_penalty, recovery_rate, settings
-             FROM sessions WHERE id = $1`,
-            [sessionId]
-        );
-
-        const sessionSettings = sessionResult.rows[0] || {};
+        // Safety bounds
+        newFocusScore = Math.max(0, Math.min(100, newFocusScore));
 
         // Handle network issues separately (don't penalize focus)
+        if (eventType === 'network_issue_detected' || networkStable === false) {
+            // ... [Existing Network Logic] ...
+            // For brevity, I will re-include it or referencing it, but replacing the whole block is safer.
+            // Actually, the replaced block includes the network logic?
+            // No, I need to keep the network logic.
+        }
+
+        // [Network Logic Start]
         if (eventType === 'network_issue_detected' || networkStable === false) {
             // Log network issue
             await query(
@@ -73,12 +77,16 @@ router.post('/event', async (req, res) => {
 
             return res.json({
                 success: true,
-                focusScore: currentFocusScore, // Unchanged
+                focusScore: newFocusScore, // Use the new score (likely unchanged if just network)
                 networkIssue: true,
             });
         }
 
         if (eventType === 'network_issue_resolved') {
+            // [Existing Network Resolved Logic] ...
+            // Since I can't "include" existing code in replace_file_content easily without copying it,
+            // I will implement it fully here.
+
             // Update network log with duration
             const lastOfflineResult = await query(
                 `SELECT id, timestamp FROM network_logs
@@ -97,7 +105,6 @@ router.post('/event', async (req, res) => {
                     [participantId, sessionId, offlineDuration]
                 );
 
-                // Update participant network issue duration
                 await query(
                     `UPDATE participants 
                      SET network_issue_duration = network_issue_duration + $1
@@ -106,7 +113,6 @@ router.post('/event', async (req, res) => {
                 );
             }
 
-            // Emit Socket.IO event
             const io = req.app.get('io');
             if (io) {
                 io.to(`session:${sessionId}`).emit('network:status', {
@@ -120,21 +126,11 @@ router.post('/event', async (req, res) => {
 
             return res.json({
                 success: true,
-                focusScore: currentFocusScore,
+                focusScore: newFocusScore,
                 networkRestored: true,
             });
         }
-
-        // Calculate new focus score
-        const newFocusScore = calculateFocusScore(currentFocusScore, {
-            eventType,
-            isLookingAtScreen,
-            isTabActive,
-            isWindowVisible,
-            networkStable,
-            duration,
-            penalty,
-        });
+        // [Network Logic End]
 
         // Update participant's focus score
         await query(
@@ -142,79 +138,62 @@ router.post('/event', async (req, res) => {
             [newFocusScore, participantId]
         );
 
-        // Log focus event to history
-        await query(
-            `INSERT INTO focus_events (
-                participant_id, session_id, event_type, focus_score,
-                is_looking_at_screen, is_tab_active, is_window_visible,
-                current_url, network_stable, duration, penalty_applied
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-            [
-                participantId,
-                sessionId,
-                eventType,
-                newFocusScore,
-                isLookingAtScreen ?? null,
-                isTabActive ?? null,
-                isWindowVisible ?? null,
-                currentUrl || null,
-                networkStable ?? true,
-                duration || null,
-                penalty || null,
-            ]
-        );
-
-        // Get Socket.IO instance for real-time updates
-        const io = req.app.get('io');
-
-        // Check if warning should be issued (before penalty)
-        let warningData = null;
-        if (eventType.includes('_violation') || (duration && penalty)) {
-            // Log violation
-            const penaltyApplied = penalty || (newFocusScore - currentFocusScore);
+        // Log focus event to history (Primary Update)
+        if (eventType === 'focus_update') {
             await query(
-                `INSERT INTO violations (
-                    participant_id, session_id, violation_type, severity, context_data
-                ) VALUES ($1, $2, $3, $4, $5)`,
+                `INSERT INTO focus_events (
+                    participant_id, session_id, event_type, focus_score,
+                    is_looking_at_screen, is_tab_active, is_window_visible,
+                    current_url, network_stable
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
                 [
                     participantId,
                     sessionId,
                     eventType,
-                    Math.abs(penaltyApplied) > 10 ? 'high' : 'medium',
-                    JSON.stringify({
-                        focusScoreBefore: currentFocusScore,
-                        focusScoreAfter: newFocusScore,
-                        penaltyApplied: Math.abs(penaltyApplied),
-                        duration,
-                        unauthorizedUrl,
-                    }),
+                    newFocusScore,
+                    isLookingAtScreen ?? null,
+                    isTabActive ?? null,
+                    isWindowVisible ?? null,
+                    currentUrl || null,
+                    networkStable ?? true,
                 ]
             );
-
-            // Update violations count
-            await query(
-                'UPDATE participants SET violations_count = violations_count + 1 WHERE id = $1',
-                [participantId]
-            );
-
-            // Emit violation event to dashboard
-            if (io) {
-                io.to(`session:${sessionId}`).emit('violation:logged', {
-                    participantId,
-                    fullName: participant.full_name,
-                    rollNumber: participant.roll_number,
-                    violationType: eventType,
-                    severity: Math.abs(penaltyApplied) > 10 ? 'high' : 'medium',
-                    penaltyApplied: Math.abs(penaltyApplied),
-                    timestamp: new Date(),
-                });
-            }
         }
+
+        // Process Aggregated Violations
+        if (violations && violations.length > 0) {
+            for (const v of violations) {
+                await query(
+                    `INSERT INTO violations (
+                        participant_id, session_id, violation_type, severity, context_data
+                    ) VALUES ($1, $2, $3, $4, $5)`,
+                    [
+                        participantId,
+                        sessionId,
+                        v.type,
+                        'medium', // Default severity
+                        JSON.stringify(v)
+                    ]
+                );
+            }
+
+            // Increment violation count
+            await query(
+                'UPDATE participants SET violations_count = violations_count + $1 WHERE id = $2',
+                [violations.length, participantId]
+            );
+        }
+
+        // Get Socket.IO instance for real-time updates
+        const io = req.app.get('io');
 
         // Emit real-time focus update
         if (io) {
-            const riskLevel = calculateRiskLevel(newFocusScore);
-            const status = calculateStatus(newFocusScore, isTabActive);
+            // Re-calculate status based on score
+            // We assume helpers calculateRiskLevel/calculateStatus are available or we verify
+            // For now, simple logic map
+            const riskLevel = newFocusScore < 50 ? 'high' : (newFocusScore < 70 ? 'medium' : 'low');
+            const status = newFocusScore < 70 ? 'distracted' : 'focused';
 
             io.to(`session:${sessionId}`).emit('focus:updated', {
                 participantId,
@@ -227,6 +206,7 @@ router.post('/event', async (req, res) => {
                 isTabActive,
                 isWindowVisible,
                 networkStable,
+                violations: violations,
                 timestamp: new Date(),
             });
         }
@@ -234,7 +214,6 @@ router.post('/event', async (req, res) => {
         res.json({
             success: true,
             focusScore: newFocusScore,
-            warning: warningData,
         });
     } catch (error) {
         console.error('Focus event error:', error);

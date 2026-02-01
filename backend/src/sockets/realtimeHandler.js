@@ -86,6 +86,12 @@ export function initializeSocketHandlers(io) {
                         sessionId // unused in function but kept for consistency
                     });
 
+                    // Update Dashboard Stats for Host
+                    io.to(`host:${participant.host_id}`).emit('host:session_participant_update', {
+                        sessionId,
+                        change: 1 // Increment
+                    });
+
                     console.log(`📢 Broadcast participant:connected for ${participant.full_name}`);
                 }
 
@@ -231,6 +237,24 @@ export function initializeSocketHandlers(io) {
                     participantId: socket.participantId,
                     timestamp: new Date(),
                 });
+
+                // Update Host Dashboard (Decrement count)
+                try {
+                    const hostResult = await query(
+                        `SELECT s.host_id FROM sessions s WHERE s.id = $1`,
+                        [socket.sessionId]
+                    );
+
+                    if (hostResult.rows.length > 0) {
+                        const hostId = hostResult.rows[0].host_id;
+                        io.to(`host:${hostId}`).emit('host:session_participant_update', {
+                            sessionId: socket.sessionId,
+                            change: -1 // Decrement
+                        });
+                    }
+                } catch (err) {
+                    console.error('Error updating host dashboard on disconnect:', err);
+                }
             }
         });
 

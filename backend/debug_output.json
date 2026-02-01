@@ -1,0 +1,165 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "email": "teacher@test.com",
+      "full_name": "Test Teacher"
+    },
+    {
+      "id": 2,
+      "email": "madhumitha@9760gmail.com",
+      "full_name": "Madhu Mitha"
+    },
+    {
+      "id": 3,
+      "email": "madhumitha9760@gmail.com",
+      "full_name": "MADHU MITHA"
+    }
+  ],
+  "sessions": [
+    {
+      "id": 18,
+      "session_code": "SPARK-EZQXIS",
+      "session_name": "Maths",
+      "host_id": 3,
+      "status": "active",
+      "created_at": "2026-02-01T15:07:16.195Z"
+    },
+    {
+      "id": 17,
+      "session_code": "SPARK-H1J9P7",
+      "session_name": "Maths",
+      "host_id": 3,
+      "status": "active",
+      "created_at": "2026-02-01T15:04:44.024Z"
+    },
+    {
+      "id": 16,
+      "session_code": "SPARK-E7P4Q9",
+      "session_name": "AI",
+      "host_id": 3,
+      "status": "active",
+      "created_at": "2026-02-01T14:59:20.233Z"
+    },
+    {
+      "id": 15,
+      "session_code": "SPARK-K5WCGB",
+      "session_name": "DBMS",
+      "host_id": 3,
+      "status": "active",
+      "created_at": "2026-02-01T14:58:37.629Z"
+    },
+    {
+      "id": 14,
+      "session_code": "SPARK-XUT0M5",
+      "session_name": "CSE",
+      "host_id": 3,
+      "status": "active",
+      "created_at": "2026-02-01T13:01:36.994Z"
+    },
+    {
+      "id": 13,
+      "session_code": "SPARK-E9FAJA",
+      "session_name": "CSE",
+      "host_id": 3,
+      "status": "active",
+      "created_at": "2026-02-01T12:57:39.306Z"
+    },
+    {
+      "id": 12,
+      "session_code": "SPARK-QOW7IO",
+      "session_name": "CSE",
+      "host_id": 3,
+      "status": "active",
+      "created_at": "2026-01-28T16:31:41.499Z"
+    },
+    {
+      "id": 11,
+      "session_code": "SPARK-25NNPI",
+      "session_name": "IOT",
+      "host_id": 3,
+      "status": "active",
+      "created_at": "2026-01-28T16:30:43.173Z"
+    },
+    {
+      "id": 10,
+      "session_code": "SPARK-4DJCSU",
+      "session_name": "IOT",
+      "host_id": 3,
+      "status": "active",
+      "created_at": "2026-01-28T03:13:50.948Z"
+    },
+    {
+      "id": 9,
+      "session_code": "SPARK-EC89EA",
+      "session_name": "Software Engineering",
+      "host_id": 3,
+      "status": "active",
+      "created_at": "2026-01-28T03:11:27.140Z"
+    },
+    {
+      "id": 8,
+      "session_code": "SPARK-6FMV2O",
+      "session_name": "Sample session",
+      "host_id": 2,
+      "status": "active",
+      "created_at": "2026-01-27T14:21:15.566Z"
+    },
+    {
+      "id": 7,
+      "session_code": "SPARK-FTPNSB",
+      "session_name": "Sample session",
+      "host_id": 2,
+      "status": "ended",
+      "created_at": "2026-01-26T15:33:08.994Z"
+    },
+    {
+      "id": 6,
+      "session_code": "SPARK-R1RXUQ",
+      "session_name": "Sample session",
+      "host_id": 2,
+      "status": "active",
+      "created_at": "2026-01-26T15:31:42.730Z"
+    },
+    {
+      "id": 5,
+      "session_code": "SPARK-ZCRKGA",
+      "session_name": "Test Class - Data Structures",
+      "host_id": 1,
+      "status": "active",
+      "created_at": "2026-01-26T14:55:20.658Z"
+    },
+    {
+      "id": 4,
+      "session_code": "SPARK-FJ533Z",
+      "session_name": "Test Class - Data Structures",
+      "host_id": 1,
+      "status": "active",
+      "created_at": "2026-01-26T08:51:35.526Z"
+    },
+    {
+      "id": 3,
+      "session_code": "SPARK-7J9BRR",
+      "session_name": "Test Class - Data Structures",
+      "host_id": 1,
+      "status": "active",
+      "created_at": "2026-01-26T08:44:42.343Z"
+    },
+    {
+      "id": 2,
+      "session_code": "SPARK-6MCKNN",
+      "session_name": "Test Class - Data Structures",
+      "host_id": 1,
+      "status": "active",
+      "created_at": "2026-01-26T08:29:39.332Z"
+    },
+    {
+      "id": 1,
+      "session_code": "SPARK-XTZNFV",
+      "session_name": "Test Class - Data Structures",
+      "host_id": 1,
+      "status": "active",
+      "created_at": "2026-01-26T08:29:33.589Z"
+    }
+  ]
+}

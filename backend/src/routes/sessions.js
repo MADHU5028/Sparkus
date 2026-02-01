@@ -2,6 +2,7 @@ import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { query } from '../config/database.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { calculateAttendance } from '../services/attendanceGenerator.js';
 
 const router = express.Router();
 
@@ -70,6 +71,27 @@ router.post('/', authenticateToken, async (req, res) => {
         );
 
         const session = result.rows[0];
+
+        // Real-time update
+        const io = req.app.get('io');
+        if (io) {
+            io.to(`host:${hostId}`).emit('host:session_created', {
+                session: {
+                    id: session.id,
+                    sessionCode: session.session_code,
+                    sessionName: session.session_name,
+                    platform: session.platform,
+                    status: session.status,
+                    participantCount: 0,
+                    modes: {
+                        focusTracking: session.focus_tracking_enabled,
+                        aiRecording: session.ai_recording_enabled,
+                        examMonitoring: session.exam_monitoring_enabled,
+                    },
+                    createdAt: session.created_at,
+                }
+            });
+        }
 
         res.status(201).json({
             message: 'Session created successfully',
@@ -249,6 +271,16 @@ router.post('/:id/start', authenticateToken, async (req, res) => {
             return res.status(404).json({ error: 'Session not found or already started' });
         }
 
+        // Real-time update
+        const io = req.app.get('io');
+        if (io) {
+            io.to(`host:${req.user.userId}`).emit('host:session_updated', {
+                sessionId: id,
+                status: 'active',
+                startedAt: result.rows[0].started_at
+            });
+        }
+
         res.json({
             message: 'Session started',
             session: {
@@ -280,8 +312,18 @@ router.post('/:id/end', authenticateToken, async (req, res) => {
             return res.status(404).json({ error: 'Session not found or not active' });
         }
 
-        // Trigger attendance calculation (will be implemented in service)
-        // await calculateAttendance(id);
+        // Trigger attendance calculation
+        await calculateAttendance(id);
+
+        // Real-time update
+        const io = req.app.get('io');
+        if (io) {
+            io.to(`host:${req.user.userId}`).emit('host:session_updated', {
+                sessionId: id,
+                status: 'ended',
+                endedAt: result.rows[0].ended_at
+            });
+        }
 
         res.json({
             message: 'Session ended',

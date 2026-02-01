@@ -43,3 +43,8 @@ export const deleteSession = async (sessionId) => {
         method: 'DELETE',
     });
 };
+
+// Get participant history
+export const getParticipantHistory = async () => {
+    return await apiClient('/participants/history');
+};

@@ -10,7 +10,6 @@ import LiveMonitoringNew from './pages/LiveMonitoringNew.jsx';
 import LiveMonitoringOverview from './pages/LiveMonitoringOverview.jsx';
 import AttendanceReport from './pages/AttendanceReport.jsx';
 import AttendanceReportOverview from './pages/AttendanceReportOverview.jsx';
-import AnalyticsOverview from './pages/AnalyticsOverview.jsx';
 import AISummary from './pages/AISummary.jsx';
 import AISummaryOverview from './pages/AISummaryOverview.jsx';
 import ExamReport from './pages/ExamReport.jsx';
@@ -119,14 +118,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="/analytics"
-                element={
-                  <ProtectedRoute>
-                    <AnalyticsOverview />
-                  </ProtectedRoute>
-                }
-              />
+
               <Route
                 path="/ai-summary"
                 element={

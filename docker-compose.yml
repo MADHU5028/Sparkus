@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # Database Service
+  postgres:
+    image: postgres:15
+    container_name: sparkus_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: madhumitha1234567890
+      POSTGRES_DB: sparkus
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - sparkus-network
+
+  # Backend Service
+  backend:
+    build: ./backend
+    container_name: sparkus_backend
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - NODE_ENV=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=sparkus
+      - DB_USER=postgres
+      - DB_PASSWORD=madhumitha1234567890
+      - FRONTEND_URL=http://localhost:5173
+      # Secrets should be passed via .env file or Docker secrets in production
+      - JWT_SECRET=your_jwt_secret_here_change_in_production
+      - OPENAI_API_KEY=your_openai_api_key_here
+      - EMAIL_HOST=smtp.gmail.com
+      - EMAIL_PORT=587
+      - EMAIL_USER=your_email@gmail.com
+      - EMAIL_PASSWORD=your_app_password_here
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      - postgres
+    networks:
+      - sparkus-network
+
+  # Frontend Service (Dashboard)
+  dashboard:
+    build: ./dashboard
+    container_name: sparkus_dashboard
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:5000/api
+    volumes:
+      - ./dashboard:/app
+      - /app/node_modules
+    networks:
+      - sparkus-network
+
+networks:
+  sparkus-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

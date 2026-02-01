@@ -1,5 +1,7 @@
 import { createContext, useState, useEffect, useContext } from 'react';
-import { login as apiLogin, signup as apiSignup, verifyToken, logout as apiLogout } from '../api/auth.js';
+import { auth, googleProvider } from '../firebase';
+import { signInWithPopup, signOut, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { syncWithBackend, verifySession, logout as apiLogout } from '../api/auth.js';
 
 const AuthContext = createContext(null);
 
@@ -7,58 +9,102 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [authError, setAuthError] = useState(null);
 
     useEffect(() => {
-        checkAuth();
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            setAuthError(null); // Clear previous errors on state change
+            if (firebaseUser) {
+                try {
+                    const idToken = await firebaseUser.getIdToken();
+                    // Sync with backend to get app session/user details
+                    const data = await syncWithBackend(idToken);
+
+                    setUser({
+                        ...data.user,
+                        photoURL: firebaseUser.photoURL
+                    });
+                    setIsAuthenticated(true);
+                } catch (error) {
+                    console.error("Backend sync failed:", error);
+                    setAuthError(error.message || "Authentication failed during backend sync.");
+                    // Force logout if backend sync fails (e.g. server error)
+                    await signOut(auth);
+                    setUser(null);
+                    setIsAuthenticated(false);
+                }
+            } else {
+                setUser(null);
+                setIsAuthenticated(false);
+                apiLogout();
+            }
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
     }, []);
 
-    const checkAuth = async () => {
+    const loginWithGoogle = async () => {
+        setAuthError(null);
         try {
-            const data = await verifyToken();
-            setUser({
-                userId: data.user.id,
-                email: data.user.email,
-                fullName: data.user.fullName,
-            });
-            setIsAuthenticated(true);
+            await signInWithPopup(auth, googleProvider);
+            // State update handled by onAuthStateChanged
         } catch (error) {
-            setUser(null);
-            setIsAuthenticated(false);
-        } finally {
-            setLoading(false);
+            console.error("Google Sign-In Error:", error);
+            setAuthError(error.message);
+            throw error;
         }
     };
 
-    const login = async (email, password) => {
-        const data = await apiLogin(email, password);
-        setUser({
-            userId: data.user.id,
-            email: data.user.email,
-            fullName: data.user.fullName,
-        });
-        setIsAuthenticated(true);
-        return data;
+    const loginWithEmail = async (email, password) => {
+        setAuthError(null);
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+        } catch (error) {
+            console.error("Email Login Error:", error);
+            setAuthError(error.message);
+            throw error;
+        }
     };
 
-    const signup = async (fullName, email, password) => {
-        const data = await apiSignup(fullName, email, password);
-        setUser({
-            userId: data.user.id,
-            email: data.user.email,
-            fullName: data.user.fullName,
-        });
-        setIsAuthenticated(true);
-        return data;
+    const registerWithEmail = async (email, password, name) => {
+        setAuthError(null);
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            if (name) {
+                await updateProfile(userCredential.user, {
+                    displayName: name
+                });
+            }
+        } catch (error) {
+            console.error("Registration Error:", error);
+            setAuthError(error.message);
+            throw error;
+        }
     };
 
-    const logout = () => {
-        apiLogout();
-        setUser(null);
-        setIsAuthenticated(false);
+    const logout = async () => {
+        setAuthError(null);
+        try {
+            await signOut(auth);
+            apiLogout();
+            // State update handled by onAuthStateChanged
+        } catch (error) {
+            console.error("Logout Error:", error);
+        }
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, isAuthenticated, login, signup, logout, checkAuth }}>
+        <AuthContext.Provider value={{
+            user,
+            loading,
+            isAuthenticated,
+            authError,
+            loginWithGoogle,
+            loginWithEmail,
+            registerWithEmail,
+            logout
+        }}>
             {children}
         </AuthContext.Provider>
     );

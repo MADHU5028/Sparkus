@@ -1,10 +1,12 @@
 import apiClient, { setToken, removeToken } from './client.js';
 
-// Sign up
-export const signup = async (fullName, email, password) => {
-    const data = await apiClient('/auth/signup', {
+// Sync Firebase User with Backend
+export const syncWithBackend = async (idToken) => {
+    const data = await apiClient('/auth/firebase', {
         method: 'POST',
-        body: JSON.stringify({ fullName, email, password }),
+        headers: {
+            'Authorization': `Bearer ${idToken}`
+        }
     });
 
     if (data.token) {
@@ -14,36 +16,8 @@ export const signup = async (fullName, email, password) => {
     return data;
 };
 
-// Login
-export const login = async (email, password) => {
-    const data = await apiClient('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email, password }),
-    });
-
-    if (data.token) {
-        setToken(data.token);
-    }
-
-    return data;
-};
-
-// Google OAuth Login
-export const googleLogin = async (googleId, email, fullName) => {
-    const data = await apiClient('/auth/google', {
-        method: 'POST',
-        body: JSON.stringify({ googleId, email, fullName }),
-    });
-
-    if (data.token) {
-        setToken(data.token);
-    }
-
-    return data;
-};
-
-// Verify token
-export const verifyToken = async () => {
+// Verify User Session (Backend)
+export const verifySession = async () => {
     try {
         const data = await apiClient('/auth/verify');
         return data;
@@ -53,7 +27,6 @@ export const verifyToken = async () => {
     }
 };
 
-// Logout
 export const logout = () => {
     removeToken();
 };

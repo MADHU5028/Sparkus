@@ -1,21 +1,42 @@
 // Sparkus Background Service Worker
 // Handles meeting detection, session state, and communication
 
+console.log('[Sparkus] Service worker loaded');
+
 const API_URL = 'http://localhost:5000/api';
 let currentSession = null;
 let participantData = null;
 
 // Listen for messages from content scripts
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    console.log('[Sparkus] Message received:', message);
     console.log('Background received message:', message);
 
     switch (message.type) {
         case 'CHECK_SESSION':
             // Return current session from storage
             chrome.storage.local.get(['activeSession', 'participantData'], (result) => {
-                sendResponse({ session: result.activeSession, participant: result.participantData });
+                if (result.activeSession) {
+                    const scoreKey = `focus_${result.activeSession.sessionCode}`;
+                    chrome.storage.local.get([scoreKey], (scoreResult) => {
+                        sendResponse({
+                            session: result.activeSession,
+                            participant: result.participantData,
+                            savedScore: scoreResult[scoreKey]
+                        });
+                    });
+                } else {
+                    sendResponse({ session: null, participant: null });
+                }
             });
             return true; // Keep channel open for async response
+
+        case 'SAVE_FOCUS_SCORE':
+            if (message.sessionCode && typeof message.score === 'number') {
+                const key = `focus_${message.sessionCode}`;
+                chrome.storage.local.set({ [key]: message.score });
+            }
+            return true;
 
         case 'JOIN_SESSION':
             joinSession(message.data).then((result) => {
@@ -58,21 +79,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 console.log('Restoring session for tab:', sender.tab.id);
                 chrome.scripting.executeScript({
                     target: { tabId: sender.tab.id },
-                    files: ['content/content-participant.js']
+                    files: ['lib/webgazer.js', 'content/content-participant.js']
                 }, () => {
                     if (chrome.runtime.lastError) {
                         console.error('Script injection failed:', chrome.runtime.lastError);
                     } else {
                         console.log('content-participant.js restored successfully');
 
-                        // Initialize the script with session data
-                        setTimeout(() => {
-                            chrome.tabs.sendMessage(sender.tab.id, {
-                                type: 'PERMISSIONS_GRANTED',
-                                session: message.session,
-                                participant: message.participant
-                            });
-                        }, 500);
+                        // Get saved score
+                        const scoreKey = `focus_${message.session.sessionCode}`;
+                        chrome.storage.local.get([scoreKey], (res) => {
+                            // Initialize the script with session data
+                            setTimeout(() => {
+                                chrome.tabs.sendMessage(sender.tab.id, {
+                                    type: 'PERMISSIONS_GRANTED',
+                                    session: message.session,
+                                    participant: message.participant,
+                                    savedScore: res[scoreKey]
+                                });
+                            }, 500);
+                        });
                     }
                 });
             }
@@ -86,29 +112,33 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     // Inject the participant script first
                     chrome.scripting.executeScript({
                         target: { tabId: tabs[0].id },
-                        files: ['content/content-participant.js']
+                        files: ['lib/webgazer.js', 'content/content-participant.js']
                     }, () => {
                         if (chrome.runtime.lastError) {
                             console.error('Script injection failed:', chrome.runtime.lastError);
                         } else {
                             console.log('content-participant.js injected successfully');
 
-                            // Give it a moment to initialize listeners
-                            setTimeout(() => {
-                                chrome.tabs.sendMessage(tabs[0].id, {
-                                    type: 'PERMISSIONS_GRANTED',
-                                    session: message.session,
-                                    participant: message.participant
-                                }, (response) => {
-                                    console.log('Content script response:', response);
-                                    sendResponse({ success: true });
+                            const scoreKey = `focus_${message.session.sessionCode}`;
+                            chrome.storage.local.get([scoreKey], (res) => {
+                                // Give it a moment to initialize listeners
+                                setTimeout(() => {
+                                    chrome.tabs.sendMessage(tabs[0].id, {
+                                        type: 'PERMISSIONS_GRANTED',
+                                        session: message.session,
+                                        participant: message.participant,
+                                        savedScore: res[scoreKey]
+                                    }, (response) => {
+                                        console.log('Content script response:', response);
+                                        sendResponse({ success: true });
 
-                                    // Also verify connection
-                                    if (chrome.runtime.lastError) {
-                                        console.warn('Message send warning:', chrome.runtime.lastError);
-                                    }
-                                });
-                            }, 500);
+                                        // Also verify connection
+                                        if (chrome.runtime.lastError) {
+                                            console.warn('Message send warning:', chrome.runtime.lastError);
+                                        }
+                                    });
+                                }, 500);
+                            });
                         }
                     });
                 }

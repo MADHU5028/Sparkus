@@ -14,28 +14,29 @@ const ExamMonitoringOverview = () => {
     const [participants, setParticipants] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchSessions();
-    }, [user]);
-
-    useEffect(() => {
-        if (selectedSession) {
-            fetchParticipants(selectedSession.id);
+    const fetchParticipants = async (sessionId) => {
+        try {
+            const result = await getSessionParticipants(sessionId);
+            setParticipants(result.participants || []);
+        } catch (error) {
+            console.error('Failed to fetch participants:', error);
         }
-    }, [selectedSession]);
+    };
 
     const fetchSessions = async () => {
-        if (!user?.userId) return;
+        const userId = user?.id || user?.userId;
+        if (!userId) {
+            setLoading(false);
+            return;
+        }
 
         try {
-            const data = await getHostSessions(user.userId);
-            // Show sessions with exam monitoring enabled
-            const examSessions = data.sessions.filter(
-                s => s.examMonitoringEnabled && (s.status === 'ended' || s.status === 'active')
-            );
+            const data = await getHostSessions(userId);
+            // Show sessions with Exam Monitoring enabled
+            const examSessions = data.sessions.filter(s => s.modes?.examMonitoring);
             setSessions(examSessions);
 
-            // Auto-select the most recent session
+            // Auto-select the most recent session if available
             if (examSessions.length > 0) {
                 setSelectedSession(examSessions[0]);
             }
@@ -46,14 +47,17 @@ const ExamMonitoringOverview = () => {
         }
     };
 
-    const fetchParticipants = async (sessionId) => {
-        try {
-            const result = await getSessionParticipants(sessionId);
-            setParticipants(result.participants || []);
-        } catch (error) {
-            console.error('Failed to fetch participants:', error);
+    useEffect(() => {
+        if (user) {
+            fetchSessions();
         }
-    };
+    }, [user]);
+
+    useEffect(() => {
+        if (selectedSession) {
+            fetchParticipants(selectedSession.id);
+        }
+    }, [selectedSession]);
 
     const getRiskScore = (participant) => {
         // Calculate risk score based on violations

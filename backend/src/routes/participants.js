@@ -1,5 +1,6 @@
 import express from 'express';
 import { query } from '../config/database.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -181,6 +182,46 @@ router.post('/:id/heartbeat', async (req, res) => {
     } catch (error) {
         console.error('Heartbeat error:', error);
         res.status(500).json({ error: 'Failed to update heartbeat' });
+    }
+});
+
+// GET /api/participants/history - Get session history for logged-in user
+router.get('/history', authenticateToken, async (req, res) => {
+    try {
+        const { email } = req.user;
+
+        if (!email) {
+            return res.status(400).json({ error: 'User email not found' });
+        }
+
+        const result = await query(
+            `SELECT p.id, p.joined_at, p.final_focus_score,
+                    s.session_name, s.session_code, s.platform, s.status, s.created_at as session_date,
+                    u.full_name as host_name
+             FROM participants p
+             JOIN sessions s ON p.session_id = s.id
+             JOIN users u ON s.host_id = u.id
+             WHERE p.email = $1
+             ORDER BY p.joined_at DESC`,
+            [email]
+        );
+
+        res.json({
+            history: result.rows.map(row => ({
+                participantId: row.id,
+                joinedAt: row.joined_at,
+                focusScore: parseFloat(row.final_focus_score),
+                sessionName: row.session_name,
+                sessionCode: row.session_code,
+                platform: row.platform,
+                status: row.status,
+                sessionDate: row.session_date,
+                hostName: row.host_name
+            }))
+        });
+    } catch (error) {
+        console.error('Get participant history error:', error);
+        res.status(500).json({ error: 'Failed to get history' });
     }
 });
 

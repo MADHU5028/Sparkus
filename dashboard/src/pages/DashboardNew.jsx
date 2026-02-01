@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
-import { getHostSessions } from '../api/sessions.js';
+import { useSocket } from '../context/SocketContext.jsx';
+import { getHostSessions, getParticipantHistory } from '../api/sessions.js';
 import { Sidebar, TopBar, Badge } from '../components';
 import './DashboardNew.css';
 
 const DashboardNew = () => {
     const { user } = useAuth();
+    const { socket } = useSocket();
     const navigate = useNavigate();
     const [sessions, setSessions] = useState([]);
+    const [joinedSessions, setJoinedSessions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({
         total: 0,
@@ -17,43 +20,103 @@ const DashboardNew = () => {
     });
 
     useEffect(() => {
-        if (user?.userId) {
+        if (user?.id || user?.userId) {
             fetchSessions();
         }
     }, [user]);
 
+    // Real-time updates
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleSessionCreated = (data) => {
+            console.log('RT: Session Created', data);
+            setSessions(prev => [data.session, ...prev]);
+            updateStats([data.session, ...sessions]);
+        };
+
+        const handleSessionUpdated = (data) => {
+            console.log('RT: Session Updated', data);
+            setSessions(prev => prev.map(s =>
+                s.id === data.sessionId
+                    ? { ...s, ...data, status: data.status, startedAt: data.startedAt || s.startedAt, endedAt: data.endedAt || s.endedAt }
+                    : s
+            ));
+        };
+
+        const handleParticipantUpdate = (data) => {
+            console.log('RT: Participant Update', data);
+            setSessions(prev => prev.map(s =>
+                s.id === data.sessionId
+                    ? { ...s, participantCount: Math.max(0, (s.participantCount || 0) + data.change) }
+                    : s
+            ));
+        };
+
+        socket.on('host:session_created', handleSessionCreated);
+        socket.on('host:session_updated', handleSessionUpdated);
+        socket.on('host:session_participant_update', handleParticipantUpdate);
+
+        return () => {
+            socket.off('host:session_created', handleSessionCreated);
+            socket.off('host:session_updated', handleSessionUpdated);
+            socket.off('host:session_participant_update', handleParticipantUpdate);
+        };
+    }, [socket, sessions]); // specific dep on sessions for stats update might be tricky, prefer separate stats calc or functional update
+
+    // Helper to recalc stats
+    const updateStats = (currentSessions) => {
+        // Re-run stats logic or just rely on the next render if stats are derived?
+        // Since stats is state, we need to set it. But better to make stats derived from 'sessions' state to avoid sync issues.
+        // Let's refactor stats to be derived or useEffect driven.
+    };
+
+    // Derived stats
+    useEffect(() => {
+        const active = sessions.filter(s => ['active', 'pending', 'created'].includes(s.status)).length;
+        const totalParticipants = sessions.reduce((sum, s) => sum + (s.participantCount || 0), 0);
+        const avgAttendance = sessions.length > 0
+            ? Math.round((totalParticipants / sessions.length) * 100) / 100
+            : 0;
+
+        setStats({
+            total: sessions.length,
+            active,
+            avgAttendance: Math.round(avgAttendance) + '%',
+        });
+    }, [sessions]);
+
     const fetchSessions = async () => {
-        if (!user?.userId) {
+        const userId = user?.id || user?.userId;
+        if (!userId) {
             console.log('No user ID available yet');
             setLoading(false);
             return;
         }
 
+        // Fetch Host Sessions
         try {
-            const data = await getHostSessions(user.userId);
-            const sessionList = data.sessions || [];
-            setSessions(sessionList);
-
-            // Calculate stats
-            const active = sessionList.filter(s => s.status === 'active').length;
-            const totalParticipants = sessionList.reduce((sum, s) => sum + (s.participantCount || 0), 0);
-            const avgAttendance = sessionList.length > 0
-                ? Math.round((totalParticipants / sessionList.length) * 100) / 100
-                : 0;
-
-            setStats({
-                total: sessionList.length,
-                active,
-                avgAttendance: Math.round(avgAttendance) + '%',
-            });
+            const hostData = await getHostSessions(userId);
+            console.log('Host Data:', hostData);
+            setSessions(hostData.sessions || []);
         } catch (error) {
-            console.error('Failed to fetch sessions:', error);
-        } finally {
-            setLoading(false);
+            console.error('Failed to fetch host sessions:', error);
+            // Don't block loading of participant history
         }
+
+        // Fetch Participant History
+        try {
+            const participantData = await getParticipantHistory();
+            console.log('Participant Data:', participantData);
+            setJoinedSessions(participantData.history || []);
+        } catch (error) {
+            console.error('Failed to fetch participant history:', error);
+        }
+
+        setLoading(false);
     };
 
-    const activeSessions = sessions.filter(s => s.status === 'active' || s.status === 'pending');
+    const activeSessions = sessions.filter(s => ['active', 'pending', 'created'].includes(s.status));
     const pastSessions = sessions.filter(s => s.status === 'ended').slice(0, 5);
 
     return (
@@ -131,6 +194,8 @@ const DashboardNew = () => {
                                                 <td>
                                                     {session.status === 'active' ? (
                                                         <Badge variant="success">Live</Badge>
+                                                    ) : session.status === 'created' ? (
+                                                        <Badge variant="primary">Created</Badge>
                                                     ) : (
                                                         <Badge variant="warning">Pending</Badge>
                                                     )}
@@ -197,6 +262,55 @@ const DashboardNew = () => {
                                                     >
                                                         →
                                                     </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </section>
+
+                    {/* Joined Sessions (Participant History) */}
+                    <section className="dashboard-section">
+                        <h2 className="section-title">Joined Sessions</h2>
+                        {joinedSessions.length === 0 ? (
+                            <div className="empty-state">
+                                <p>You haven't joined any sessions yet</p>
+                            </div>
+                        ) : (
+                            <div className="table-container">
+                                <table className="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Session Name</th>
+                                            <th>Host</th>
+                                            <th>Date</th>
+                                            <th>Your Score</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {joinedSessions.map(session => (
+                                            <tr key={session.participantId}>
+                                                <td>
+                                                    <div className="session-name">{session.sessionName}</div>
+                                                    <div className="session-code uk-text-small">{session.sessionCode}</div>
+                                                </td>
+                                                <td>{session.hostName}</td>
+                                                <td>{new Date(session.sessionDate).toLocaleDateString()}</td>
+                                                <td>
+                                                    <span className={
+                                                        session.focusScore >= 70 ? 'text-success' :
+                                                            session.focusScore >= 50 ? 'text-warning' : 'text-danger'
+                                                    }>
+                                                        {session.focusScore}%
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <Badge variant={session.status === 'active' ? 'success' : 'secondary'}>
+                                                        {session.status}
+                                                    </Badge>
                                                 </td>
                                             </tr>
                                         ))}

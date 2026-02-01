@@ -2,6 +2,7 @@
 // Detects when user is on Google Meet or Zoom
 
 (function () {
+    console.log('[Sparkus] Content script injected');
     console.log('Sparkus detector loaded');
 
     const currentUrl = window.location.href;

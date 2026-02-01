@@ -16,30 +16,21 @@ const AttendanceReportOverview = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [attendanceChanges, setAttendanceChanges] = useState({});
 
-    useEffect(() => {
-        fetchSessions();
-    }, [user]);
-
-    useEffect(() => {
-        if (selectedSession) {
-            fetchParticipants(selectedSession.id);
-        }
-    }, [selectedSession]);
-
     const fetchSessions = async () => {
-        if (!user?.userId) return;
+        const userId = user?.id || user?.userId;
+        if (!userId) {
+            setLoading(false);
+            return;
+        }
 
         try {
-            const data = await getHostSessions(user.userId);
-            // Show ended sessions and active sessions
-            const relevantSessions = data.sessions.filter(
-                s => s.status === 'ended' || s.status === 'active'
-            );
-            setSessions(relevantSessions);
-
-            // Auto-select the most recent session
-            if (relevantSessions.length > 0) {
-                setSelectedSession(relevantSessions[0]);
+            const data = await getHostSessions(userId);
+            // Filter sessions that have ended or are active (ignoring just created empty ones if preferred, or show all)
+            // Showing all for reports is usually better
+            setSessions(data.sessions || []);
+            // Auto-select the most recent session if available
+            if (data.sessions && data.sessions.length > 0) {
+                setSelectedSession(data.sessions[0]);
             }
         } catch (error) {
             console.error('Failed to fetch sessions:', error);
@@ -47,6 +38,18 @@ const AttendanceReportOverview = () => {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        if (user) {
+            fetchSessions();
+        }
+    }, [user]);
+
+    useEffect(() => {
+        if (selectedSession) {
+            fetchParticipants(selectedSession.id);
+        }
+    }, [selectedSession]);
 
     const fetchParticipants = async (sessionId) => {
         try {

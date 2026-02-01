@@ -16,7 +16,6 @@ const Sidebar = () => {
         { path: '/create-session', icon: '➕', label: 'Create Session' },
         { path: '/live-monitoring', icon: '👁️', label: 'Live Monitoring' },
         { path: '/attendance-report', icon: '📋', label: 'Attendance Report' },
-        { path: '/analytics', icon: '📈', label: 'Analytics' },
         { path: '/ai-summary', icon: '🤖', label: 'AI Summary' },
         { path: '/exam-monitoring', icon: '🔒', label: 'Exam Monitoring' },
     ];

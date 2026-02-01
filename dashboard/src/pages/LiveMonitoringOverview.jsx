@@ -39,10 +39,14 @@ const LiveMonitoringOverview = () => {
     }, [socket, connected]);
 
     const fetchActiveSessions = async () => {
-        if (!user?.userId) return;
+        const userId = user?.id || user?.userId;
+        if (!userId) {
+            setLoading(false);
+            return;
+        }
 
         try {
-            const data = await getHostSessions(user.userId);
+            const data = await getHostSessions(userId);
             const activeSessions = data.sessions.filter(s => s.status === 'active');
             setSessions(activeSessions);
 

@@ -58,6 +58,7 @@
                 "ui/permissions.html",
                 "ui/permissions.js",
                 "lib/webgazer.js",
+                "lib/mediapipe/face_mesh/*",
                 "lib/focus-tracker.js",
                 "content/content-participant.js",
                 "content/content-host.js"
