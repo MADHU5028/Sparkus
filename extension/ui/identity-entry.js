@@ -69,8 +69,8 @@ form.addEventListener('submit', async (e) => {
 
         // Store participant data in chrome.storage (persists across page navigations)
         await chrome.storage.local.set({
-            sparkus_participant: response.participant,
-            sparkus_session: session
+            participantData: response.participant,
+            activeSession: session
         });
 
         console.log('✅ Participant data saved to chrome.storage:', response.participant);

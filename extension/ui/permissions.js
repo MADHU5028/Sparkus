@@ -8,9 +8,9 @@ enableBtn.addEventListener('click', async () => {
 
     try {
         // Get session and participant data from chrome.storage
-        const result = await chrome.storage.local.get(['sparkus_session', 'sparkus_participant']);
-        const session = result.sparkus_session;
-        const participant = result.sparkus_participant;
+        const result = await chrome.storage.local.get(['activeSession', 'participantData']);
+        const session = result.activeSession;
+        const participant = result.participantData;
 
         console.log('Permissions granted, data from chrome.storage:', { session, participant });
 
