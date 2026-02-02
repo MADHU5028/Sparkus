@@ -249,7 +249,7 @@ sparkus-app/
 | **Dashboard** | Next.js 14, React, TypeScript, Tailwind CSS (planned) |
 | **AI** | OpenAI Whisper (transcription), GPT-4 (insights) |
 | **Real-time** | WebSocket (Socket.io) |
-| **Auth** | JWT, bcrypt |
+| **Auth** | JWT, bcryptjs |
 
 ---
 

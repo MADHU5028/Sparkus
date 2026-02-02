@@ -440,8 +440,11 @@ console.log('🎓 Sparkus participant mode loaded (Phase 3)');
             let deduction = 0;
             let currentViolations = [];
 
-            // 2.1 CHECK CAMERA STATUS
+            // 2.1 CHECK CAMERA STATUS (Dynamic Detection)
+            updateCameraStatusFromUI();
+
             // Triggered by existing initializeCameraMode logic updating 'cameraMode' global
+            // or now by updateCameraStatusFromUI()
 
             // State Transition Logging
             // State Transition Logging
@@ -715,9 +718,11 @@ console.log('🎓 Sparkus participant mode loaded (Phase 3)');
                 console.log(`[Sparkus][Focus] Score dropped to ${focusScore}%`);
                 logFocusChange('PENALTY', oldScore, focusScore, deduction);
             } else {
-                // Recovery (Only if NO violations active)
+                // Recovery (Only if NO violations active AND Camera is ON)
                 const hasActiveViolations = Object.values(violationStart).some(v => v !== null);
-                if (!hasActiveViolations && focusScore < 100) {
+                const canRecover = !hasActiveViolations && cameraMode === 'ON';
+
+                if (canRecover && focusScore < 100) {
                     const oldScore = focusScore;
                     focusScore = Math.min(100, focusScore + (RECOVERY_RATE * 0.5)); // 0.5 per 5s = 6% per min
                     if (Math.floor(oldScore) !== Math.floor(focusScore)) {
@@ -1083,14 +1088,7 @@ console.log('🎓 Sparkus participant mode loaded (Phase 3)');
         }
 
         async function sendFocusUpdate(participant, score, violations) {
-            /*
-            if (DEV_MODE) {
-                console.log('[Sparkus][DEV] Focus Update:', { score, violations });
-                return;
-            }
-            */
             if (!chrome.runtime?.id) return;
-
             try {
                 await chrome.runtime.sendMessage(chrome.runtime.id, {
                     type: 'SEND_FOCUS_EVENT',
@@ -1108,6 +1106,30 @@ console.log('🎓 Sparkus participant mode loaded (Phase 3)');
                 });
             } catch (e) {
                 // quiet fail
+            }
+        }
+
+        function updateCameraStatusFromUI() {
+            let isMuted = false;
+            const hostname = window.location.hostname;
+
+            if (hostname.includes('meet.google.com')) {
+                // Google Meet: Look for the camera button's muted state
+                const meetCamBtn = document.querySelector('button[data-is-muted][aria-label*="camera"], button[data-is-muted][aria-label*="Camera"]');
+                if (meetCamBtn) {
+                    isMuted = meetCamBtn.getAttribute('data-is-muted') === 'true';
+                }
+            } else if (hostname.includes('zoom.us')) {
+                // Zoom: Typically has labels like "Start Video" when off
+                const zoomCamBtn = document.querySelector('button[aria-label*="Start Video"], button[aria-label*="start video"]');
+                if (zoomCamBtn) isMuted = true;
+            }
+
+            const newMode = isMuted ? 'OFF' : 'ON';
+            if (newMode !== cameraMode) {
+                console.log(`[Sparkus] Camera state changed detected via UI: ${cameraMode} -> ${newMode}`);
+                cameraMode = newMode;
+                eyeTrackingEnabled = (cameraMode === 'ON');
             }
         }
 

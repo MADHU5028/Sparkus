@@ -10,7 +10,7 @@ I've successfully created the **core infrastructure** for the Sparkus platform. 
 
 - ✅ Express server with Socket.io integration
 - ✅ PostgreSQL database schema (9 tables)
-- ✅ Authentication system (JWT + bcrypt)
+- ✅ Authentication system (JWT + bcryptjs)
 - ✅ Session management APIs
 - ✅ Participant join system
 - ✅ Real-time focus tracking endpoints
